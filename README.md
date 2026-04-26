@@ -1,74 +1,72 @@
-# Trabalho I - Controle Avançado de Processos (2026/1)
-## Engenharia de Controle e Automação - UFRGS
+# Chuveiro Turbinado: Controle Avançado de Processos Térmicos
 
-Este repositório contém o desenvolvimento do **Trabalho I** da disciplina de Controle Avançado de Processos. O objetivo principal é o projeto, sintonia e comparação de estratégias de controle (SISO vs. Cascata) para um sistema térmico com atraso de transporte: o **Chuveiro Turbinado**.
-
----
-
-## 1. Descrição do Processo: Chuveiro Turbinado
-O sistema é composto por três estágios dinâmicos:
-1.  **Boiler (Aquecedor):** Sistema de aquecimento de água com dinâmica de primeira ordem.
-2.  **Tanque de Mistura:** Onde ocorre o balanço de massa e energia, com volume variável e múltiplas entradas (vazão fria, quente e distúrbio).
-3.  **Tubulação Longa:** Responsável por introduzir um **Atraso de Transporte (Tempo Morto)** significativo e perdas térmicas para o ambiente antes de atingir o ponto de consumo ($T_1$).
+Este repositório apresenta o desenvolvimento de estratégias de controle para um sistema de mistura térmica industrial com elevado atraso de transporte, conhecido como **Chuveiro Turbinado**. O projeto abrange desde a modelagem física inicial até a implementação de arquiteturas de controle em cascata, validadas por métricas quantitativas de erro.
 
 ---
 
-## 2. Roteiro de Execução (Ordem das Atividades)
+## 1. Descrição do Processo
+O sistema simula um processo térmico composto por:
+* **Boiler (Fonte Térmica):** Sistema de aquecimento governado por controle On-Off.
+* **Tanque de Mistura:** Onde ocorre o balanço de massa e energia entre as correntes quente e fria.
+* **Tubulação de 50 metros:** Introduz um **Atraso de Transporte (Tempo Morto)** significativo, desafiando a estabilidade dos controladores convencionais.
 
-Para a conclusão do trabalho, seguiremos rigorosamente a seguinte sequência técnica:
+![alt text](image.png)
 
-### Passo 1: Configuração do Ambiente 🟢 (Concluído)
-- Instalação do VS Code e extensões (Python, Jupyter).
-- Criação de ambiente virtual isolado (`.venv`).
-- Instalação de bibliotecas matemáticas: `numpy`, `scipy`, `control`, `matplotlib` e `plotly`.
+---
 
-### Passo 2: Identificação do Sistema (Malha Aberta) 🟡 (Próxima Atividade)
-- Execução de **Testes de Degrau** para levantar a curva de reação do processo.
-- Obtenção dos parâmetros **FOPTD** (First-Order Plus Dead Time):
+## 2. Roteiro de Desenvolvimento (Passos do Projeto)
+
+Para o cumprimento das exigências acadêmicas e profissionais, o projeto foi estruturado nos seguintes passos:
+
+### Passo 1: Modelagem e Configuração do Ambiente
+* Implementação das Equações Diferenciais Ordinárias (EDOs) do sistema.
+* Configuração do ambiente de simulação em Python (NumPy, SciPy, Control).
+
+### Passo 2: Análise Estática (Curvas de Operação)
+* Mapeamento do regime permanente do sistema.
+* Determinação da linearidade do processo e definição dos pontos de operação nominais.
+
+### Passo 3: Identificação de Parâmetros FOPTD (Extração de $K_p, \tau, \theta$)
+* Execução de **Testes de Degrau** para levantar a curva de reação do processo.
+* Obtenção dos parâmetros **FOPTD** (First-Order Plus Dead Time):
   - Ganho do Processo ($K_p$)
   - Constante de Tempo ($\tau$)
   - Tempo Morto ($\theta$)
-- Identificação realizada para as duas variáveis controladas: $T_f$ (Saída do Tanque) e $T_1$ (Ponta da Tubulação).
+* Identificação realizada para as duas variáveis controladas: $T_f$ (Saída do Tanque) e $T_1$ (Ponta da Tubulação).
 
-### Passo 3: Projeto de Sintonia SISO ($T_f$)
-- Projeto de controlador PID para a malha de temperatura do tanque.
-- Foco: Rapidez de resposta e estabilidade em uma malha sem atraso dominante.
+### Passo 4 : Controle SISO da Malha Rápida ($T_t$) - [Ref. Prof 1.1.2]
+* **Objetivo:** Projetar um controlador PID para a temperatura do tanque ($T_t$), onde o atraso de transporte é desprezível.
+* **Foco:** Rapidez de resposta e estabilidade.
+* *Nota: Por restrições físicas de causalidade, a variável controlada escrava foi definida como a temperatura do tanque ($T_t$) em substituição ao distúrbio externo ($T_f$).*
 
-### Passo 4: Projeto de Sintonia SISO ($T_1$)
-- Projeto de controlador PID para a malha final com atraso de transporte.
-- Aplicação de métodos específicos para tempo morto (IMC, Skogestad ou Cohen-Coon).
-- Análise da degradação de performance causada pelo atraso $\theta$.
+### Passo 5: Controle SISO da Malha com Atraso ($T_1$) - [Ref. Prof 1.1.1]
+* **Objetivo:** Projetar um controlador PID para a temperatura de consumo final ($T_1$).
+* **Desafio:** Mitigar a degradação de performance causada pelos 50 metros de tubulação ($	heta$).
+* **Método:** Aplicação da sintonia de **Skogestad (SIMC)** para garantir robustez.
 
-### Passo 5: Projeto de Controle em Cascata
-- Implementação da estrutura **Mestre-Escravo**:
-  - **Mestre (Outer Loop):** Controla $T_1$ (temperatura de consumo).
-  - **Escravo (Inner Loop):** Controla $T_f$ (temperatura do tanque).
-- Objetivo: Corrigir distúrbios no tanque antes que eles se propaguem pela tubulação.
+### Passo 6: Arquitetura de Controle em Cascata - [Ref. Prof 1.1.3]
+* **Estrutura:** Implementação de uma malha mestre (externa) e uma malha escrava (interna).
+    * **Mestre:** Supervisiona $T_1$ e dita o setpoint térmico.
+    * **Escravo:** Atua diretamente na válvula quente para corrigir distúrbios antes que percorram a tubulação.
+* **Ajuste Fino:** Implementação de *Detuning* no mestre para evitar ressonância com o ruído do boiler.
 
-### Passo 6: Análise Comparativa e Relatório
-- Simulações de rejeição de distúrbio (ex: variação na temperatura de entrada fria $T_f$).
-- Comparação de métricas de desempenho (ISE, IAE, Sobressinal e Tempo de Acomodação).
-- Exportação dos resultados para PDF via WebPDF.
-
-### Passo 7: Validação em Modelica
-- Transposição do modelo físico para o ambiente Modelica para validação final baseada em componentes.
+### Passo 7: Análise Quantitativa de Desempenho (IAE)
+* Cálculo da **Integral do Erro Absoluto (IAE)** para comparar matematicamente as estratégias.
+* Validação da redução do desconforto térmico ao usuário sob condições de choque térmico na rede de água fria.
 
 ---
 
-## 3. Estrutura do Repositório
-- `00_Introdução.ipynb`: Caderno inicial com as rotinas básicas de simulação do professor.
-- `ChuveiroTurbinado_Final.ipynb`: Ambiente principal de desenvolvimento dos controladores e integrações de EDO.
-- `.venv/`: Ambiente virtual de execução (não versionado).
-- `Apostila_Parte_V.pdf`: Referência teórica sobre métodos de sintonia.
+## 3. Resultados Obtidos
+A transição da malha simples (SISO) para a arquitetura em Cascata permitiu uma melhoria significativa na rejeição de distúrbios de carga. Enquanto o SISO apresenta um afundamento severo de temperatura em distúrbios, a Cascata antecipa a correção no tanque, garantindo estabilidade na ponta do consumo.
+
+* **Redução do Erro Acumulado (IAE):** ~57% de melhoria.
+* **Estabilidade:** Eliminação de oscilações induzidas por ruído térmico.
 
 ---
 
-## 4. Como Executar
-1. Certifique-se de ter o Python 3.10+ instalado.
-2. Ative o ambiente virtual: `.\\.venv\\Scripts\\activate` (Windows).
-3. Selecione o Kernel `.venv` no VS Code.
-4. Execute as células sequencialmente.
+## 4. Tecnologias Utilizadas
+* **Python 3.10+**
+* **Jupyter Notebook** (Ambiente de Simulação)
+* **SciPy/Solve_IVP** (Integração Numérica)
+* **Plotly/Matplotlib** (Visualização de Dados)
 
----
-**Desenvolvido por:** Bruno Richwicki
-**Professor:** Jorge Otávio Trierweiler
