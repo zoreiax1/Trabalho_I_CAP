@@ -10,7 +10,7 @@ O sistema simula um processo térmico composto por:
 * **Tanque de Mistura:** Onde ocorre o balanço de massa e energia entre as correntes quente e fria.
 * **Tubulação de 50 metros:** Introduz um **Atraso de Transporte (Tempo Morto)** significativo, desafiando a estabilidade dos controladores convencionais.
 
-![alt text](image.png)
+![alt text](Planta_chuveiro_desenho.png)
 
 ---
 
@@ -34,17 +34,17 @@ Para o cumprimento das exigências acadêmicas e profissionais, o projeto foi es
   - Tempo Morto ($\theta$)
 * Identificação realizada para as duas variáveis controladas: $T_f$ (Saída do Tanque) e $T_1$ (Ponta da Tubulação).
 
-### Passo 4 : Controle SISO da Malha Rápida ($T_t$) - [Ref. Prof 1.1.2]
+### Passo 4 : Controle SISO da Malha Rápida ($T_t$) 
 * **Objetivo:** Projetar um controlador PID para a temperatura do tanque ($T_t$), onde o atraso de transporte é desprezível.
 * **Foco:** Rapidez de resposta e estabilidade.
-* *Nota: Por restrições físicas de causalidade, a variável controlada escrava foi definida como a temperatura do tanque ($T_t$) em substituição ao distúrbio externo ($T_f$).*
 
-### Passo 5: Controle SISO da Malha com Atraso ($T_1$) - [Ref. Prof 1.1.1]
+
+### Passo 5: Controle SISO da Malha com Atraso ($T_1$) 
 * **Objetivo:** Projetar um controlador PID para a temperatura de consumo final ($T_1$).
 * **Desafio:** Mitigar a degradação de performance causada pelos 50 metros de tubulação ($	heta$).
 * **Método:** Aplicação da sintonia de **Skogestad (SIMC)** para garantir robustez.
 
-### Passo 6: Arquitetura de Controle em Cascata - [Ref. Prof 1.1.3]
+### Passo 6: Arquitetura de Controle em Cascata
 * **Estrutura:** Implementação de uma malha mestre (externa) e uma malha escrava (interna).
     * **Mestre:** Supervisiona $T_1$ e dita o setpoint térmico.
     * **Escravo:** Atua diretamente na válvula quente para corrigir distúrbios antes que percorram a tubulação.
